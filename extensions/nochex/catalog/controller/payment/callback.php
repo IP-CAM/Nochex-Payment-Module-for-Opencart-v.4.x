@@ -99,7 +99,7 @@ class Callback extends \Opencart\System\Engine\Controller {
 		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 		curl_setopt($ch, CURLOPT_POST, true);
 		curl_setopt($ch, CURLOPT_POSTFIELDS, trim($request, '&')); // Set POST fields
-		curl_setopt($ch, CURLOPT_HTTPHEADER, array("Host: www.nochex.com"));
+		curl_setopt($ch, CURLOPT_HTTPHEADER, array("Host: secure.nochex.com"));
 		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
 		$output = curl_exec($ch); // Post back
 		curl_close($ch);

@@ -88,7 +88,8 @@ class Callback extends \Opencart\System\Engine\Controller {
 
 
 }else{
-	
+		ini_set("SMTP","mail.nochex.com" );
+		
 		$url = "https://secure.nochex.com/apc/apc.aspx";
 
 		// Curl code to post variables back
@@ -98,24 +99,27 @@ class Callback extends \Opencart\System\Engine\Controller {
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 		curl_setopt($ch, CURLOPT_POST, true);
-		curl_setopt($ch, CURLOPT_POSTFIELDS, trim($request, '&')); // Set POST fields
-		curl_setopt($ch, CURLOPT_HTTPHEADER, array("Host: secure.nochex.com"));
+		curl_setopt($ch, CURLOPT_POSTFIELDS, $request); // Set POST fields
 		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($ch, CURLOPT_TIMEOUT, 60); // set connection time out variable - 60 seconds	
 		$output = curl_exec($ch); // Post back
 		curl_close($ch);
 
-		if (strcmp($output, 'AUTHORISED') == 0) {
-		$Msg = "APC was " . $output. ", and this was a " . $_POST['status'] . " transaction.";
+		mail("james.lugton@nochex,com","APC", $output, "from:james.lugton@nochex,com");
+		
+		
+		if( strstr($output, 'AUTHORISED') !== false ) {
+		$Msg = "APC was AUTHORISED, and this was a " . $_POST['status'] . " transaction.";
 			$this->model_checkout_order->addHistory($order_id, $this->config->get('payment_nochex_order_status_id'), $Msg);
 			
 		} else {
-		$Msg = "APC was " . $output. ", and this was a " . $_POST['status'] . " transaction.";
+			$Msg = "APC was DECLINED, and this was a " . $_POST['status'] . " transaction.". $output;
 			$this->model_checkout_order->addHistory($order_id, $this->config->get('config_order_status_id'), $Msg);
 		}
 
 		// Since it returned, the customer should see success.
 		// It's up to the store owner to manually verify payment.
-		$this->response->redirect($this->url->link('checkout/success', '', 'SSL'));
+		 $this->response->redirect($this->url->link('checkout/success', '', 'SSL'));
 		
 }
 	

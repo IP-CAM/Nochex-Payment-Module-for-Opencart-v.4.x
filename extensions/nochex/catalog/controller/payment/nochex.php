@@ -6,7 +6,7 @@ namespace Opencart\Catalog\Controller\Extension\Nochex\Payment;
 class Nochex extends \Opencart\System\Engine\Controller { 
 
 	public function index() {
-		$this->load->language('extension/payment/nochex');
+		$this->load->language('extension/nochex/payment/nochex');
 		$products = $this->cart->getProducts();
 		setlocale(LC_MONETARY, 'en_GB');	
 		$data['button_confirm'] = $this->language->get('button_confirm');

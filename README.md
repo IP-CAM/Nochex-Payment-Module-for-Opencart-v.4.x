@@ -28,6 +28,7 @@ Changelog
 
 - Couple of updates to a couple of module files to work with OpenCart 4.1.0
 - APC Script update.
+  - Extra validation to ensure paid amounts are the same as ordered amounts.
 
 = 1.2 =
 

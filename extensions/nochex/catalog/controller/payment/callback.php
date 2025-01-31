@@ -6,8 +6,6 @@ namespace Opencart\Catalog\Controller\Extension\Nochex\Payment;
 class Callback extends \Opencart\System\Engine\Controller { 
 
 	public function index() {
-		 
-		//$logger = new Log('nochex.log');
 		
 		$this->load->language('extension/nochex/payment/nochex');
 
@@ -43,6 +41,12 @@ class Callback extends \Opencart\System\Engine\Controller {
 			
 		if(isset($this->request->post['optional_1']) == "Enabled"){
 
+		if ($order_info['total'] != $_POST["gross_Amount"]){
+				
+			$this->model_checkout_order->addHistory($order_id, 16, "Paid Amount does not match the order total, please check before sending out or supplying goods and services");		
+			$this->response->redirect($this->url->link('checkout/success', '', 'SSL'));
+		}
+		
 		$url = "https://secure.nochex.com/callback/callback.aspx";
 		$ch = curl_init ();
 		curl_setopt ($ch, CURLOPT_URL, $url);
@@ -55,10 +59,9 @@ class Callback extends \Opencart\System\Engine\Controller {
 		curl_close($ch);
 
 		if($_POST["transaction_status"] == "100"){
-		$testStatus = "Test";
-		}else{
-		$testStatus = "Live";
-		}
+			$this->model_checkout_order->addHistory($order_id, 16, "This transaction was a TEST, please check this was intended and test mode has not been accidentally enabled");	
+			$this->response->redirect($this->url->link('checkout/success', '', 'SSL'));
+		}		
 		
 		if ($response=="AUTHORISED") {
 			
@@ -88,7 +91,6 @@ class Callback extends \Opencart\System\Engine\Controller {
 
 
 }else{
-		ini_set("SMTP","mail.nochex.com" );
 		
 		$url = "https://secure.nochex.com/apc/apc.aspx";
 
@@ -105,15 +107,22 @@ class Callback extends \Opencart\System\Engine\Controller {
 		$output = curl_exec($ch); // Post back
 		curl_close($ch);
 
-		mail("james.lugton@nochex,com","APC", $output, "from:james.lugton@nochex,com");
+		if ($order_info['total'] != $_POST["amount"]){				
+			$this->model_checkout_order->addHistory($order_id, 16, "Paid Amount does not match the order total, please check before sending out or supplying goods and services");		
+			$this->response->redirect($this->url->link('checkout/success', '', 'SSL'));
+		}
 		
+		if ("test" == $_POST["status"]){				
+			$this->model_checkout_order->addHistory($order_id, 16, "This transaction was a TEST, please check this was intended and test mode has not been accidentally enabled");		
+			$this->response->redirect($this->url->link('checkout/success', '', 'SSL'));
+		}
 		
 		if( strstr($output, 'AUTHORISED') !== false ) {
-		$Msg = "APC was AUTHORISED, and this was a " . $_POST['status'] . " transaction.";
+			$Msg = "APC was AUTHORISED, ( " . $_POST['Transaction_ID'] . " )";
 			$this->model_checkout_order->addHistory($order_id, $this->config->get('payment_nochex_order_status_id'), $Msg);
 			
 		} else {
-			$Msg = "APC was DECLINED, and this was a " . $_POST['status'] . " transaction.". $output;
+			$Msg = "APC was DECLINED, ( " . $_POST['Transaction_ID'] . " )";
 			$this->model_checkout_order->addHistory($order_id, $this->config->get('config_order_status_id'), $Msg);
 		}
 
